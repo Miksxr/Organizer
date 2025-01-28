@@ -59,6 +59,10 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    implementation(libs.lifecycle.viewmodel.compose)
+
+    implementation(libs.navigation.compose)
+
     implementation(libs.kotlinx.coroutines.core)
 
     implementation(libs.room.runtime)
@@ -67,4 +71,6 @@ dependencies {
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+
+    implementation(libs.hilt.navigation.compose)
 }

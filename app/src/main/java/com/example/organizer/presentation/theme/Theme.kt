@@ -1,6 +1,5 @@
-package com.example.organizer.ui.theme
+package com.example.organizer.presentation.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
