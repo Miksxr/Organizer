@@ -23,7 +23,7 @@ object AppModule {
             context,
             AppDatabase::class.java,
             "study_organizer.db"
-        ).build()
+        ).fallbackToDestructiveMigration().build()
     }
 
     @Provides

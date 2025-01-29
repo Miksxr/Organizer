@@ -6,11 +6,13 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class SubjectRepository @Inject constructor(
-    private val subjectDao: SubjectDao
+    private val dao: SubjectDao
 ) {
-    fun getAllSubjects(): Flow<List<SubjectEntity>> = subjectDao.getAllSubjects()
+    fun getAllSubjects(): Flow<List<SubjectEntity>> = dao.getAllSubjects()
 
-    suspend fun addSubject(subject: SubjectEntity) {
-        subjectDao.insert(subject)
-    }
+    suspend fun addSubject(subject: SubjectEntity) = dao.insert(subject)
+
+    suspend fun updateSubject(subject: SubjectEntity) = dao.update(subject)
+
+    suspend fun deleteSubject(subject: SubjectEntity) = dao.delete(subject)
 }

@@ -1,4 +1,8 @@
 package com.example.organizer.presentation.screens.homeworks
 
-class HomeworksScreen {
+import androidx.compose.runtime.Composable
+
+@Composable
+fun HomeworksScreen() {
+
 }
