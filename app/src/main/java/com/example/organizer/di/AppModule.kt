@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.example.organizer.data.local.AppDatabase
 import com.example.organizer.data.local.dao.SubjectDao
 import com.example.organizer.data.repository.SubjectRepositoryImpl
+import com.example.organizer.domain.repository.SubjectRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,5 +31,7 @@ object AppModule {
     fun provideSubjectDao(database: AppDatabase): SubjectDao = database.subjectDao()
 
     @Provides
-    fun provideSubjectRepository(subjectDao: SubjectDao): SubjectRepositoryImpl = SubjectRepositoryImpl(subjectDao)
+    fun provideSubjectRepository(subjectDao: SubjectDao): SubjectRepository {
+        return SubjectRepositoryImpl(subjectDao)
+    }
 }
