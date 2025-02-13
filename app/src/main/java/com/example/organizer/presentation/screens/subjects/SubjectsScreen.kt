@@ -42,8 +42,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.organizer.data.local.entity.SubjectEntity
-import com.example.organizer.domain.usecase.Subject
-import com.example.organizer.domain.usecase.toEntity
+import com.example.organizer.data.mapper.toEntity
+import com.example.organizer.domain.model.Subject
 
 @Composable
 fun SubjectsScreen(viewModel: SubjectViewModel = hiltViewModel()) {
@@ -102,7 +102,6 @@ fun SubjectsScreen(viewModel: SubjectViewModel = hiltViewModel()) {
                 }
             }
 
-            // Диалог добавления
             if (isDialogOpen) {
                 AddEditSubjectDialog(
                     title = "Добавление нового предмета",
@@ -124,7 +123,6 @@ fun SubjectsScreen(viewModel: SubjectViewModel = hiltViewModel()) {
                 )
             }
 
-            // Диалог редактирования
             if (isEditDialogOpen && selectedSubject != null) {
                 AddEditSubjectDialog(
                     title = "Редактирование предмета",
@@ -135,9 +133,9 @@ fun SubjectsScreen(viewModel: SubjectViewModel = hiltViewModel()) {
                     onConfirm = {
                         selectedSubject?.let { subject ->
                             viewModel.updateSubject(
-                                subject.id, // Передаем ID
-                                name,       // Новое имя
-                                teacherName // Новое имя преподавателя
+                                subject.id,
+                                name,
+                                teacherName
                             )
                         }
                         isEditDialogOpen = false
@@ -188,16 +186,34 @@ private fun AddEditSubjectDialog(
             Column {
                 OutlinedTextField(
                     value = name,
-                    onValueChange = onNameChange,
+                    onValueChange = { newValue ->
+                        onNameChange(newValue.take(50))
+                    },
                     label = { Text("Название предмета") },
                     modifier = Modifier.fillMaxWidth()
                 )
+                Text(
+                    text = "${name.length}/50",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (name.length == 50) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.align(Alignment.End)
+                )
+
                 Spacer(modifier = Modifier.height(8.dp))
+
                 OutlinedTextField(
                     value = teacherName,
-                    onValueChange = onTeacherChange,
+                    onValueChange = { newValue ->
+                        onTeacherChange(newValue.take(50))
+                    },
                     label = { Text("ФИО преподавателя") },
                     modifier = Modifier.fillMaxWidth()
+                )
+                Text(
+                    text = "${teacherName.length}/50",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (teacherName.length == 50) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.align(Alignment.End)
                 )
             }
         },
@@ -214,7 +230,10 @@ private fun AddEditSubjectDialog(
                     }
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                TextButton(onClick = onConfirm) {
+                TextButton(
+                    onClick = onConfirm,
+                    enabled = name.isNotBlank() && teacherName.isNotBlank()
+                ) {
                     Text("Сохранить")
                 }
             }

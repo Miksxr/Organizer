@@ -3,6 +3,7 @@ package com.example.organizer.presentation.screens.subjects
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.organizer.data.local.entity.SubjectEntity
+import com.example.organizer.data.mapper.toDomain
 import com.example.organizer.domain.usecase.AddSubjectUseCase
 import com.example.organizer.domain.usecase.DeleteSubjectUseCase
 import com.example.organizer.domain.usecase.GetSubjectsUseCase
@@ -29,30 +30,28 @@ class SubjectViewModel @Inject constructor(
 
     fun addSubject(name: String, teacherName: String) {
         viewModelScope.launch {
-            addSubjectUseCase(
-                SubjectEntity(
-                    name = name,
-                    teacherName = teacherName
-                )
+            val subjectEntity = SubjectEntity(
+                name = name,
+                teacherName = teacherName
             )
+            addSubjectUseCase(subjectEntity.toDomain())
         }
     }
 
     fun updateSubject(subjectId: Long, newName: String, newTeacherName: String) {
         viewModelScope.launch {
-            updateSubjectUseCase(
-                SubjectEntity(
-                    id = subjectId,
-                    name = newName,
-                    teacherName = newTeacherName
-                )
+            val subjectEntity = SubjectEntity(
+                id = subjectId,
+                name = newName,
+                teacherName = newTeacherName
             )
+            updateSubjectUseCase(subjectEntity.toDomain())
         }
     }
 
     fun deleteSubject(subject: SubjectEntity) {
         viewModelScope.launch {
-            deleteSubjectUseCase(subject)
+            deleteSubjectUseCase(subject.toDomain())
         }
     }
 }
