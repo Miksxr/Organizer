@@ -14,7 +14,7 @@ interface SubjectDao {
     @Query("SELECT * FROM subjects")
     fun getAllSubjects(): Flow<List<SubjectEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert
     suspend fun insert(subject: SubjectEntity)
 
     @Update
