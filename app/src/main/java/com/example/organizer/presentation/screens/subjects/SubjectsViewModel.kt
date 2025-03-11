@@ -28,22 +28,24 @@ class SubjectViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
-    fun addSubject(name: String, teacherName: String) {
+    fun addSubject(name: String, teacherName: String, photoUri: String?) {
         viewModelScope.launch {
             val subjectEntity = SubjectEntity(
                 name = name,
-                teacherName = teacherName
+                teacherName = teacherName,
+                photoUri = photoUri
             )
             addSubjectUseCase(subjectEntity.toDomain())
         }
     }
 
-    fun updateSubject(subjectId: Long, newName: String, newTeacherName: String) {
+    fun updateSubject(subjectId: Long, newName: String, newTeacherName: String, photoUri: String?) {
         viewModelScope.launch {
             val subjectEntity = SubjectEntity(
                 id = subjectId,
                 name = newName,
-                teacherName = newTeacherName
+                teacherName = newTeacherName,
+                photoUri = photoUri
             )
             updateSubjectUseCase(subjectEntity.toDomain())
         }

@@ -3,8 +3,11 @@ package com.example.organizer.di
 import android.content.Context
 import androidx.room.Room
 import com.example.organizer.data.local.AppDatabase
+import com.example.organizer.data.local.dao.HomeworkDao
 import com.example.organizer.data.local.dao.SubjectDao
+import com.example.organizer.data.repository.HomeworkRepositoryImpl
 import com.example.organizer.data.repository.SubjectRepositoryImpl
+import com.example.organizer.domain.repository.HomeworkRepository
 import com.example.organizer.domain.repository.SubjectRepository
 import dagger.Module
 import dagger.Provides
@@ -33,5 +36,13 @@ object AppModule {
     @Provides
     fun provideSubjectRepository(subjectDao: SubjectDao): SubjectRepository {
         return SubjectRepositoryImpl(subjectDao)
+    }
+
+    @Provides
+    fun provideHomeworkDao(database: AppDatabase): HomeworkDao = database.homeworkDao()
+
+    @Provides
+    fun provideHomeworkRepository(homeworkDao: HomeworkDao): HomeworkRepository {
+        return HomeworkRepositoryImpl(homeworkDao)
     }
 }

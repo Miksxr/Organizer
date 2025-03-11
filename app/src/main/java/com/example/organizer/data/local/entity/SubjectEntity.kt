@@ -8,5 +8,6 @@ import androidx.room.PrimaryKey
 data class SubjectEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
-    val teacherName: String
+    val teacherName: String,
+    val photoUri: String? = null // Новое поле
 )
