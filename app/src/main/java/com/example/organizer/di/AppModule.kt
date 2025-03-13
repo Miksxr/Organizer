@@ -3,10 +3,15 @@ package com.example.organizer.di
 import android.content.Context
 import androidx.room.Room
 import com.example.organizer.data.local.AppDatabase
+import com.example.organizer.data.local.dao.GradeDao
 import com.example.organizer.data.local.dao.HomeworkDao
 import com.example.organizer.data.local.dao.SubjectDao
-import com.example.organizer.data.repository.HomeworkRepositoryImpl
-import com.example.organizer.data.repository.SubjectRepositoryImpl
+import com.example.organizer.data.repositoryimpl.FileRepositoryImpl
+import com.example.organizer.data.repositoryimpl.GradeRepositoryImpl
+import com.example.organizer.data.repositoryimpl.HomeworkRepositoryImpl
+import com.example.organizer.data.repositoryimpl.SubjectRepositoryImpl
+import com.example.organizer.domain.repository.FileRepository
+import com.example.organizer.domain.repository.GradeRepository
 import com.example.organizer.domain.repository.HomeworkRepository
 import com.example.organizer.domain.repository.SubjectRepository
 import dagger.Module
@@ -44,5 +49,21 @@ object AppModule {
     @Provides
     fun provideHomeworkRepository(homeworkDao: HomeworkDao): HomeworkRepository {
         return HomeworkRepositoryImpl(homeworkDao)
+    }
+
+    @Provides
+    fun provideGradeDao(database: AppDatabase): GradeDao = database.gradeDao()
+
+    @Provides
+    fun provideGradeRepository(gradeDao: GradeDao): GradeRepository {
+        return GradeRepositoryImpl(gradeDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFileRepository(
+        @ApplicationContext context: Context
+    ): FileRepository {
+        return FileRepositoryImpl(context)
     }
 }

@@ -1,7 +1,6 @@
-package com.example.organizer.data.repository
+package com.example.organizer.data.repositoryimpl
 
 import com.example.organizer.data.local.dao.SubjectDao
-import com.example.organizer.data.local.entity.SubjectEntity
 import com.example.organizer.data.mapper.toDomain
 import com.example.organizer.data.mapper.toEntity
 import com.example.organizer.domain.model.Subject

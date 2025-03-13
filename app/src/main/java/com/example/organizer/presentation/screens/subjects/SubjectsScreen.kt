@@ -1,5 +1,8 @@
 package com.example.organizer.presentation.screens.subjects
 
+import android.content.Context
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -43,11 +46,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -59,9 +65,15 @@ import coil.compose.rememberImagePainter
 import com.example.organizer.data.local.entity.SubjectEntity
 import com.example.organizer.data.mapper.toEntity
 import com.example.organizer.domain.model.Subject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
 
 @Composable
 fun SubjectsScreen(viewModel: SubjectViewModel = hiltViewModel()) {
+    val context = LocalContext.current
     val subjects by viewModel.subjects.collectAsState()
     var isDialogOpen by remember { mutableStateOf(false) }
     var isEditDialogOpen by remember { mutableStateOf(false) }
@@ -70,113 +82,129 @@ fun SubjectsScreen(viewModel: SubjectViewModel = hiltViewModel()) {
     var teacherName by remember { mutableStateOf("") }
     var selectedPhotoUri by remember { mutableStateOf<String?>(null) }
 
+    val coroutineScope = rememberCoroutineScope()
+
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
-        uri?.let { selectedPhotoUri = it.toString() }
+        uri?.let {
+            coroutineScope.launch {
+                val savedPath = viewModel.saveImage(it)
+                selectedPhotoUri = savedPath
+            }
+        }
     }
 
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Предметы",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            contentPadding = PaddingValues(bottom = 16.dp)
         ) {
-            Text(
-                text = "Предметы",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            items(subjects) { subject ->
+                SubjectCard(
+                    subject = subject,
+                    onClick = {
+                        selectedSubject = subject
+                        name = subject.name
+                        teacherName = subject.teacherName
+                        selectedPhotoUri = subject.photoPath
+                        isEditDialogOpen = true
+                    }
+                )
+            }
+        }
 
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(bottom = 16.dp)
-            ) {
-                items(subjects) { subject ->
-                    SubjectCard(
-                        subject = subject,
-                        onClick = {
-                            selectedSubject = subject
-                            name = subject.name
-                            teacherName = subject.teacherName
-                            selectedPhotoUri = subject.photoUri
-                            isEditDialogOpen = true
-                        }
+        FloatingActionButton(
+            onClick = { isDialogOpen = true },
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "Добавить предмет")
+        }
+
+        if (isDialogOpen) {
+            AddEditSubjectDialog(
+                title = "Добавление нового предмета",
+                name = name,
+                teacherName = teacherName,
+                photoUri = selectedPhotoUri,
+                onNameChange = { name = it },
+                onTeacherChange = { teacherName = it },
+                onPhotoSelect = {
+                    photoPickerLauncher.launch(
+                        PickVisualMediaRequest(
+                            ActivityResultContracts.PickVisualMedia.ImageOnly
+                        )
                     )
+                },
+                onConfirm = {
+                    viewModel.addSubject(name, teacherName, selectedPhotoUri)
+                    isDialogOpen = false
+                    name = ""
+                    teacherName = ""
+                    selectedPhotoUri = null
+                },
+                onDismiss = {
+                    isDialogOpen = false
+                    name = ""
+                    teacherName = ""
+                    selectedPhotoUri = null
                 }
-            }
+            )
+        }
 
-            if (isDialogOpen) {
-                AddEditSubjectDialog(
-                    title = "Добавление нового предмета",
-                    name = name,
-                    teacherName = teacherName,
-                    photoUri = selectedPhotoUri,
-                    onNameChange = { name = it },
-                    onTeacherChange = { teacherName = it },
-                    onPhotoSelect = { photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
-                    onConfirm = {
-                        viewModel.addSubject(name, teacherName, selectedPhotoUri)
-                        isDialogOpen = false
-                        name = ""
-                        teacherName = ""
-                        selectedPhotoUri = null
-                    },
-                    onDismiss = {
-                        isDialogOpen = false
-                        name = ""
-                        teacherName = ""
-                        selectedPhotoUri = null
+        if (isEditDialogOpen && selectedSubject != null) {
+            AddEditSubjectDialog(
+                title = "Редактирование предмета",
+                name = name,
+                teacherName = teacherName,
+                photoUri = selectedPhotoUri,
+                onNameChange = { name = it },
+                onTeacherChange = { teacherName = it },
+                onPhotoSelect = {
+                    photoPickerLauncher.launch(
+                        PickVisualMediaRequest(
+                            ActivityResultContracts.PickVisualMedia.ImageOnly
+                        )
+                    )
+                },
+                onConfirm = {
+                    selectedSubject?.let { subject ->
+                        viewModel.updateSubject(
+                            subject.id,
+                            name,
+                            teacherName,
+                            selectedPhotoUri
+                        )
                     }
-                )
-            }
-
-            if (isEditDialogOpen && selectedSubject != null) {
-                AddEditSubjectDialog(
-                    title = "Редактирование предмета",
-                    name = name,
-                    teacherName = teacherName,
-                    photoUri = selectedPhotoUri,
-                    onNameChange = { name = it },
-                    onTeacherChange = { teacherName = it },
-                    onPhotoSelect = { photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
-                    onConfirm = {
-                        selectedSubject?.let { subject ->
-                            viewModel.updateSubject(
-                                subject.id,
-                                name,
-                                teacherName,
-                                selectedPhotoUri
-                            )
-                        }
-                        isEditDialogOpen = false
-                        name = ""
-                        teacherName = ""
-                        selectedPhotoUri = null
-                    },
-                    onDelete = {
-                        selectedSubject?.let { viewModel.deleteSubject(it.toEntity()) }
-                        isEditDialogOpen = false
-                        name = ""
-                        teacherName = ""
-                        selectedPhotoUri = null
-                    },
-                    onDismiss = {
-                        isEditDialogOpen = false
-                        name = ""
-                        teacherName = ""
-                        selectedPhotoUri = null
-                    }
-                )
-            }
-
-            FloatingActionButton(
-                onClick = { isDialogOpen = true },
-                modifier = Modifier.align(Alignment.End)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Добавить предмет")
-            }
+                    isEditDialogOpen = false
+                    name = ""
+                    teacherName = ""
+                    selectedPhotoUri = null
+                },
+                onDelete = {
+                    selectedSubject?.let { viewModel.deleteSubject(it.toEntity()) }
+                    isEditDialogOpen = false
+                    name = ""
+                    teacherName = ""
+                    selectedPhotoUri = null
+                },
+                onDismiss = {
+                    isEditDialogOpen = false
+                    name = ""
+                    teacherName = ""
+                    selectedPhotoUri = null
+                }
+            )
         }
     }
 }
@@ -199,18 +227,25 @@ private fun SubjectCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            subject.photoUri?.let { uri ->
-                AsyncImage(
-                    model = uri,
+            subject.photoPath?.let { path ->
+                val bitmap = remember {
+                    BitmapFactory.decodeFile(path)
+                }
+                Image(
+                    bitmap = bitmap.asImageBitmap(),
                     contentDescription = "Фото предмета",
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape)
+                        .width(60.dp)
+                        .height(80.dp)
+                        .clip(RoundedCornerShape(8.dp))
                 )
                 Spacer(modifier = Modifier.width(16.dp))
             }
 
-            Column {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
                 Text(
                     text = subject.name,
                     fontWeight = FontWeight.Bold,
@@ -243,38 +278,45 @@ private fun AddEditSubjectDialog(
         title = { Text(text = title, style = MaterialTheme.typography.titleLarge) },
         text = {
             Column {
-                // Кнопка выбора фото
+                photoUri?.let { uri ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        AsyncImage(
+                            model = uri,
+                            contentDescription = "Превью фото",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .width(60.dp)
+                                .height(80.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Button(
                     onClick = onPhotoSelect,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Выбрать фото")
+                    Icon(Icons.Default.Add, contentDescription = "Выбрать фото", tint = Color.White)
                     Spacer(Modifier.width(8.dp))
-                    Text("Выбрать фото")
+                    Text("Выбрать фото", color = Color.White)
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Превью фото
-                photoUri?.let { uri ->
-                    AsyncImage(
-                        model = uri,
-                        contentDescription = "Превью фото",
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(RoundedCornerShape(8.dp)))
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Поля ввода
                 OutlinedTextField(
                     value = name,
                     onValueChange = onNameChange,
                     label = { Text("Название предмета") },
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
                     value = teacherName,

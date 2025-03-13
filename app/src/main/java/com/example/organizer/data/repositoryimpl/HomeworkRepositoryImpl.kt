@@ -1,4 +1,4 @@
-package com.example.organizer.data.repository
+package com.example.organizer.data.repositoryimpl
 
 import com.example.organizer.data.local.dao.HomeworkDao
 import com.example.organizer.data.local.entity.HomeworkEntity

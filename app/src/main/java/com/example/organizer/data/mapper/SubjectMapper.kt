@@ -8,7 +8,7 @@ fun Subject.toEntity(): SubjectEntity {
         id = this.id,
         name = this.name,
         teacherName = this.teacherName,
-        photoUri = this.photoUri
+        photoPath = this.photoPath
     )
 }
 
@@ -17,7 +17,7 @@ fun SubjectEntity.toDomain(): Subject {
         id = this.id,
         name = this.name,
         teacherName = this.teacherName,
-        photoUri = this.photoUri
+        photoPath = this.photoPath
     )
 }
 

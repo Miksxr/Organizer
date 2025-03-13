@@ -4,5 +4,5 @@ data class Subject(
     val id: Long,
     val name: String,
     val teacherName: String,
-    val photoUri: String? = null // Новое поле
+    val photoPath: String? = null // Новое поле
 )
