@@ -32,10 +32,11 @@ class GradesViewModel @Inject constructor(
         }
     }
 
-    fun addGrade(gradeValue: Int, date: String, subjectId: Int) {
+    fun addGrade(workType: String, gradeValue: Int, date: String, subjectId: Int) {
         viewModelScope.launch {
             val grade = GradeEntity(
                 subjectId = subjectId,
+                workType = workType,
                 grade = gradeValue,
                 date = date
             )

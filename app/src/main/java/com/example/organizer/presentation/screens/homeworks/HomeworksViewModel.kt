@@ -32,10 +32,11 @@ class HomeworksViewModel @Inject constructor(
         }
     }
 
-    fun addHomework(description: String, dueDate: String, subjectId: Int) {
+    fun addHomework(title: String, description: String, dueDate: String, subjectId: Int) {
         viewModelScope.launch {
             val homework = HomeworkEntity(
                 subjectId = subjectId,
+                title = title,
                 description = description,
                 dueDate = dueDate
             )

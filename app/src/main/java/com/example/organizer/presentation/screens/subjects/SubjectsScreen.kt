@@ -9,6 +9,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,6 +56,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,9 +64,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
+import com.example.organizer.R
 import com.example.organizer.data.local.entity.SubjectEntity
 import com.example.organizer.data.mapper.toEntity
 import com.example.organizer.domain.model.Subject
+import com.example.organizer.navigation.AppNavigation
+import com.example.organizer.presentation.screens.settings.ThemeMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -93,6 +98,26 @@ fun SubjectsScreen(viewModel: SubjectViewModel = hiltViewModel()) {
                 selectedPhotoUri = savedPath
             }
         }
+    }
+
+    val systemDarkTheme = isSystemInDarkTheme()
+    val darkTheme = when(ThemeMode.SYSTEM.name) {
+        ThemeMode.DARK.name -> true
+        ThemeMode.LIGHT.name -> false
+        else -> systemDarkTheme
+    }
+    val backgroundImage = if (darkTheme) R.drawable.bg_night else R.drawable.bg_day
+    val imageAlpha = if (darkTheme) 0.15f else 0.9f // Разная прозрачность для тем
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Фоновое изображение
+        Image(
+            painter = painterResource(backgroundImage),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            alpha = imageAlpha,
+            modifier = Modifier.fillMaxSize()
+        )
+
     }
 
     Column(

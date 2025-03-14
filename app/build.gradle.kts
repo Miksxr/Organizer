@@ -74,5 +74,12 @@ dependencies {
 
     implementation(libs.hilt.navigation.compose)
 
-    implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation(libs.coil.compose)
+
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("androidx.datastore:datastore-core:1.0.0")
+
+    // Дополнительно для работы с корутинами
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
 }

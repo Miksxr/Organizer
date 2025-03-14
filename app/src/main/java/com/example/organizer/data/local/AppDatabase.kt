@@ -11,7 +11,7 @@ import com.example.organizer.data.local.entity.GradeEntity
 import com.example.organizer.data.local.entity.HomeworkEntity
 import com.example.organizer.data.local.entity.SubjectEntity
 
-@Database(entities = [SubjectEntity::class, GradeEntity::class, HomeworkEntity::class], version = 7)
+@Database(entities = [SubjectEntity::class, GradeEntity::class, HomeworkEntity::class], version = 8)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun subjectDao(): SubjectDao
     abstract fun gradeDao(): GradeDao

@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 data class GradeEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val subjectId: Int,
+    val workType: String,
     val grade: Int,
     val date: String
 )

@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -47,6 +48,7 @@ fun GradesScreen(
     val grades by gradesViewModel.grades.collectAsState()
     var selectedSubjectId by remember { mutableStateOf<Int?>(null) }
     var isDialogOpen by remember { mutableStateOf(false) }
+    var newWorkType by remember { mutableStateOf("") }
     var newGrade by remember { mutableStateOf("") }
     var newDate by remember { mutableStateOf("") }
 
@@ -82,24 +84,29 @@ fun GradesScreen(
     // Диалог добавления
     if (isDialogOpen) {
         AddGradeDialog(
+            workType = newWorkType,
             grade = newGrade,
             date = newDate,
+            onWorkTypeChange = { newWorkType = it },
             onGradeChange = { newGrade = it },
             onDateChange = { newDate = it },
             onConfirm = {
                 selectedSubjectId?.let { id ->
                     gradesViewModel.addGrade(
+                        workType = newWorkType,
                         gradeValue = newGrade.toIntOrNull() ?: 0,
                         date = newDate,
                         subjectId = id
                     )
                     isDialogOpen = false
+                    newWorkType = ""
                     newGrade = ""
                     newDate = ""
                 }
             },
             onDismiss = {
                 isDialogOpen = false
+                newWorkType = ""
                 newGrade = ""
                 newDate = ""
             }
@@ -123,6 +130,12 @@ fun GradeItem(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
+                    text = grade.workType,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+                Text(
                     text = "Оценка: ${grade.grade}",
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -141,8 +154,10 @@ fun GradeItem(
 
 @Composable
 fun AddGradeDialog(
+    workType: String,
     grade: String,
     date: String,
+    onWorkTypeChange: (String) -> Unit,
     onGradeChange: (String) -> Unit,
     onDateChange: (String) -> Unit,
     onConfirm: () -> Unit,
@@ -154,13 +169,18 @@ fun AddGradeDialog(
         text = {
             Column {
                 OutlinedTextField(
+                    value = workType,
+                    onValueChange = onWorkTypeChange,
+                    label = { Text("Тип работы (например: Практика 2)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
                     value = grade,
                     onValueChange = { onGradeChange(it.filter { c -> c.isDigit() }) },
                     label = { Text("Оценка") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
-
                 OutlinedTextField(
                     value = date,
                     onValueChange = onDateChange,
@@ -172,7 +192,7 @@ fun AddGradeDialog(
         confirmButton = {
             TextButton(
                 onClick = onConfirm,
-                enabled = grade.isNotBlank() && date.isNotBlank()
+                enabled = workType.isNotBlank() && grade.isNotBlank() && date.isNotBlank()
             ) {
                 Text("Добавить")
             }

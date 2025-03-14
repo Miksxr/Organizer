@@ -32,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -48,6 +49,7 @@ fun HomeworksScreen(
     val homeworks by viewModel.homeworks.collectAsState()
     var selectedSubjectId by remember { mutableStateOf<Int?>(null) }
     var isDialogOpen by remember { mutableStateOf(false) }
+    var newTitle by remember { mutableStateOf("") }
     var newDescription by remember { mutableStateOf("") }
     var newDueDate by remember { mutableStateOf("") }
 
@@ -84,20 +86,29 @@ fun HomeworksScreen(
     // Диалог добавления
     if (isDialogOpen) {
         AddHomeworkDialog(
+            title = newTitle,
             description = newDescription,
             dueDate = newDueDate,
+            onTitleChange = { newTitle = it },
             onDescriptionChange = { newDescription = it },
             onDueDateChange = { newDueDate = it },
             onConfirm = {
                 selectedSubjectId?.let {
-                    viewModel.addHomework(newDescription, newDueDate, it)
+                    viewModel.addHomework(
+                        title = newTitle,
+                        description = newDescription,
+                        dueDate = newDueDate,
+                        subjectId = it
+                    )
                     isDialogOpen = false
+                    newTitle = ""
                     newDescription = ""
                     newDueDate = ""
                 }
             },
             onDismiss = {
                 isDialogOpen = false
+                newTitle = ""
                 newDescription = ""
                 newDueDate = ""
             }
@@ -127,23 +138,20 @@ fun HomeworkItem(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = homework.description,
-                    style = if (homework.isCompleted) {
-                        MaterialTheme.typography.bodyMedium.copy(
-                            textDecoration = TextDecoration.LineThrough
-                        )
-                    } else {
-                        MaterialTheme.typography.bodyMedium
-                    }
+                    text = homework.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
                 )
+                Text(text = homework.description)
                 Text(
-                    text = "Срок: ${homework.dueDate}",
-                    style = MaterialTheme.typography.bodySmall
+                    text = "До ${homework.dueDate}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary
                 )
             }
 
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete")
+                Icon(Icons.Default.Delete, null)
             }
         }
     }
@@ -183,8 +191,10 @@ fun DropdownMenuComponent(
 
 @Composable
 fun AddHomeworkDialog(
+    title: String,
     description: String,
     dueDate: String,
+    onTitleChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
     onDueDateChange: (String) -> Unit,
     onConfirm: () -> Unit,
@@ -196,15 +206,21 @@ fun AddHomeworkDialog(
         text = {
             Column {
                 OutlinedTextField(
+                    value = title,
+                    onValueChange = onTitleChange,
+                    label = { Text("Краткое название") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
                     value = description,
                     onValueChange = onDescriptionChange,
-                    label = { Text("Описание задания") },
+                    label = { Text("Подробное описание") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = dueDate,
                     onValueChange = onDueDateChange,
-                    label = { Text("Срок выполнения (дд.мм.гггг)") },
+                    label = { Text("Срок выполнения") },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -212,7 +228,7 @@ fun AddHomeworkDialog(
         confirmButton = {
             TextButton(
                 onClick = onConfirm,
-                enabled = description.isNotBlank() && dueDate.isNotBlank()
+                enabled = title.isNotBlank() && dueDate.isNotBlank()
             ) {
                 Text("Добавить")
             }

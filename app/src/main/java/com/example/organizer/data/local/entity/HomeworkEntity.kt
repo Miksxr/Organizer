@@ -7,7 +7,8 @@ import androidx.room.PrimaryKey
 data class HomeworkEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val subjectId: Int,
+    val title: String,
     val description: String,
     val dueDate: String,
-    val isCompleted: Boolean = false // Новое поле
+    val isCompleted: Boolean = false
 )

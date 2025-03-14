@@ -1,6 +1,10 @@
 package com.example.organizer.di
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room.Room
 import com.example.organizer.data.local.AppDatabase
 import com.example.organizer.data.local.dao.GradeDao
@@ -65,5 +69,13 @@ object AppModule {
         @ApplicationContext context: Context
     ): FileRepository {
         return FileRepositoryImpl(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
+        return PreferenceDataStoreFactory.create(
+            produceFile = { context.preferencesDataStoreFile("settings") }
+        )
     }
 }
