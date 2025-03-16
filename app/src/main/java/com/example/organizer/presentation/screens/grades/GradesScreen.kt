@@ -33,6 +33,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.organizer.R
 import com.example.organizer.data.local.entity.GradeEntity
@@ -53,7 +54,14 @@ fun GradesScreen(
     var newDate by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.padding(16.dp)) {
-        // Выбор предмета
+        Text(
+            text = "Оценки",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .padding(bottom = 12.dp)
+        )
+
         DropdownMenuComponent(
             subjects = subjects,
             onSubjectSelected = {
@@ -171,7 +179,7 @@ fun AddGradeDialog(
                 OutlinedTextField(
                     value = workType,
                     onValueChange = onWorkTypeChange,
-                    label = { Text("Тип работы (например: Практика 2)") },
+                    label = { Text("Название работы") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
@@ -184,7 +192,7 @@ fun AddGradeDialog(
                 OutlinedTextField(
                     value = date,
                     onValueChange = onDateChange,
-                    label = { Text("Дата (дд.мм.гггг)") },
+                    label = { Text("Дата получения") },
                     modifier = Modifier.fillMaxWidth()
                 )
             }

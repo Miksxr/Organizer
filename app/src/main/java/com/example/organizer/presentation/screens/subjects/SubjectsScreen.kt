@@ -106,8 +106,9 @@ fun SubjectsScreen(viewModel: SubjectViewModel = hiltViewModel()) {
         ThemeMode.LIGHT.name -> false
         else -> systemDarkTheme
     }
+
     val backgroundImage = if (darkTheme) R.drawable.bg_night else R.drawable.bg_day
-    val imageAlpha = if (darkTheme) 0.15f else 0.9f // Разная прозрачность для тем
+    val imageAlpha = if (darkTheme) 0.3f else 0.3f // Разная прозрачность для тем
     Box(modifier = Modifier.fillMaxSize()) {
         // Фоновое изображение
         Image(
@@ -126,7 +127,7 @@ fun SubjectsScreen(viewModel: SubjectViewModel = hiltViewModel()) {
     ) {
         Text(
             text = "Предметы",
-            fontSize = 20.sp,
+            fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 16.dp)
         )

@@ -1,15 +1,21 @@
 package com.example.organizer.presentation.screens.homeworks
 
+import android.service.autofill.DateTransformation
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -32,13 +38,26 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.organizer.data.local.entity.HomeworkEntity
 import com.example.organizer.domain.model.Subject
 import com.example.organizer.presentation.screens.subjects.SubjectViewModel
+import java.text.ParseException
+import java.text.SimpleDateFormat
+import java.util.Locale
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.Color
+import java.util.*
 
 @Composable
 fun HomeworksScreen(
@@ -54,7 +73,14 @@ fun HomeworksScreen(
     var newDueDate by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.padding(16.dp)) {
-        // Выбор предмета
+        Text(
+            text = "Домашка",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .padding(bottom = 12.dp)
+        )
+
         DropdownMenuComponent(
             subjects = subjects,
             onSubjectSelected = {
@@ -63,7 +89,6 @@ fun HomeworksScreen(
             }
         )
 
-        // Список домашних заданий
         LazyColumn(modifier = Modifier.weight(1f)) {
             items(homeworks) { homework ->
                 HomeworkItem(
@@ -74,7 +99,6 @@ fun HomeworksScreen(
             }
         }
 
-        // Кнопка добавления
         FloatingActionButton(
             onClick = { isDialogOpen = true },
             modifier = Modifier.align(Alignment.End)
@@ -200,35 +224,67 @@ fun AddHomeworkDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    var showDatePicker by remember { mutableStateOf(false) }
+    var isDateValid by remember { mutableStateOf(true) }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Новое задание") },
         text = {
             Column {
+                // Поле для названия
                 OutlinedTextField(
                     value = title,
                     onValueChange = onTitleChange,
-                    label = { Text("Краткое название") },
+                    label = { Text("Название работы") },
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Поле для описания
                 OutlinedTextField(
                     value = description,
                     onValueChange = onDescriptionChange,
                     label = { Text("Подробное описание") },
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Поле для даты с маской и валидацией
                 OutlinedTextField(
                     value = dueDate,
-                    onValueChange = onDueDateChange,
-                    label = { Text("Срок выполнения") },
+                    onValueChange = {
+                        onDueDateChange(it)
+                        isDateValid = isValidDate(it)
+                    },
+                    label = { Text("Дата сдачи") },
+                    placeholder = { Text("дд.мм.гггг") },
+                    trailingIcon = {
+                        IconButton(onClick = { showDatePicker = true }) {
+                            Icon(Icons.Default.DateRange, "Выбрать дату")
+                        }
+                    },
+                    isError = !isDateValid,
+                    visualTransformation = DateTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                if (!isDateValid) {
+                    Text(
+                        "✖ Неверный формат! Используйте дд.мм.гггг",
+                        color = Color.Red,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
             }
         },
         confirmButton = {
             TextButton(
                 onClick = onConfirm,
-                enabled = title.isNotBlank() && dueDate.isNotBlank()
+                enabled = title.isNotBlank() && isDateValid
             ) {
                 Text("Добавить")
             }
@@ -239,4 +295,102 @@ fun AddHomeworkDialog(
             }
         }
     )
+
+    // Диалог выбора даты
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDateSelected = { date ->
+                onDueDateChange(date)
+                isDateValid = true
+                showDatePicker = false
+            },
+            onDismiss = { showDatePicker = false }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DatePickerDialog(
+    onDateSelected: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val datePickerState = rememberDatePickerState()
+    val selectedDate = datePickerState.selectedDateMillis
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(
+                onClick = {
+                    selectedDate?.let {
+                        val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                            timeInMillis = it
+                        }
+                        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+                        onDateSelected(dateFormat.format(calendar.time))
+                    }
+                    onDismiss()
+                }
+            ) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Отмена")
+            }
+        }
+    ) {
+        DatePicker(state = datePickerState)
+    }
+}
+
+// Валидация даты
+private fun isValidDate(date: String): Boolean {
+    return try {
+        SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).apply {
+            isLenient = false
+        }.parse(date)
+        true
+    } catch (e: ParseException) {
+        false
+    }
+}
+
+class DateTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val trimmed = text.text.take(8) // Ограничиваем длину
+        val formatted = buildString {
+            trimmed.forEachIndexed { index, c ->
+                if (index == 2 || index == 4) append('.')
+                append(c)
+            }
+        }
+        return TransformedText(
+            text = AnnotatedString(formatted),
+            offsetMapping = DateOffsetMapper
+        )
+    }
+
+    private object DateOffsetMapper : OffsetMapping {
+        override fun originalToTransformed(offset: Int): Int = when (offset) {
+            0 -> 0
+            1 -> 1
+            2 -> 2
+            3 -> 4 // После точки
+            4 -> 5
+            5 -> 6
+            6 -> 8 // После второй точки
+            7 -> 9
+            else -> 10
+        }
+
+        override fun transformedToOriginal(offset: Int): Int = when (offset) {
+            in 0..2 -> offset
+            in 3..4 -> offset - 1
+            in 5..7 -> offset - 2
+            else -> 8
+        }
+    }
 }

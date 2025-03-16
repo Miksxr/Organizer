@@ -18,6 +18,7 @@ import com.example.organizer.domain.repository.FileRepository
 import com.example.organizer.domain.repository.GradeRepository
 import com.example.organizer.domain.repository.HomeworkRepository
 import com.example.organizer.domain.repository.SubjectRepository
+import com.example.organizer.presentation.screens.settings.NotificationHelper
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -77,5 +78,11 @@ object AppModule {
         return PreferenceDataStoreFactory.create(
             produceFile = { context.preferencesDataStoreFile("settings") }
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideNotificationHelper(@ApplicationContext context: Context): NotificationHelper {
+        return NotificationHelper(context)
     }
 }
